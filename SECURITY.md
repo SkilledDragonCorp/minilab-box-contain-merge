@@ -24,8 +24,10 @@ Email **hello@skilleddragon.com**. This repository is an educational minilab, no
 
 ```sh
 cargo install cargo-audit --locked --version 0.22.2
-cargo audit --deny warnings
+cargo audit --deny warnings --ignore RUSTSEC-2026-0249
 ```
+
+`RUSTSEC-2026-0249` (`smartstring` unmaintained) is transitive through `strands-box-policy` → cedar/dogwood at pin `223e3959d539110eaacfacb6f973c03928dc39b0`. The lab does not vendor a replacement for that pin.
 
 ## Upstream
 

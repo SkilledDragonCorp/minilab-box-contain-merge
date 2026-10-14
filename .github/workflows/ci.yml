@@ -111,7 +111,9 @@ jobs:
       - name: Install cargo-audit 0.22.2
         run: cargo install cargo-audit --locked --version 0.22.2
       - name: cargo audit
-        run: cargo audit --deny warnings
+        # RUSTSEC-2026-0249 (smartstring unmaintained) is transitive via
+        # strands-box-policy → cedar/dogwood at pin 223e395; no lab-owned fix.
+        run: cargo audit --deny warnings --ignore RUSTSEC-2026-0249
 
   gate:
     name: CI Gate
