@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+# Patterns are split so this script does not match itself.
+p1='e\.g\.'
+p2='if'' present'
+p3='or npm'' install'
+p4='or'' similar'
+p5='something'' like'
+failed=0
+for pattern in "$p1" "$p2" "$p3" "$p4" "$p5"; do
+  if rg -n \
+    --glob '!ci/upstream/**' \
+    --glob '!.github/workflows/upstream-*' \
+    --glob '!upstream/**' \
+    --glob '!target/**' \
+    --glob '!.git/**' \
+    --glob '!scripts/check-banned-phrases' \
+    -e "$pattern" \
+    README.md RESULTS.md SECURITY.md scripts .github/workflows/ci.yml \
+    .claude/skills crates policies examples .env.example 2>/dev/null; then
+    echo "banned phrase matched: $pattern"
+    failed=1
+  fi
+done
+
+if [[ "$failed" -ne 0 ]]; then
+  exit 1
+fi
+echo "banned-phrases ok"

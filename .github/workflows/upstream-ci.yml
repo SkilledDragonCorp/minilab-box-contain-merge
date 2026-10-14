@@ -1,0 +1,87 @@
+name: Upstream CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: upstream-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'upstream/crates/**/!(*.md)'
+              - 'upstream/Cargo.toml'
+              - 'upstream/Cargo.lock'
+              - '.github/workflows/upstream-rust-*'
+              - '.github/workflows/upstream-ci.yml'
+              - 'ci/upstream/**'
+
+  pin:
+    name: Upstream pin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Assert upstream SHA
+        run: |
+          set -euo pipefail
+          got="$(git -C upstream rev-parse HEAD)"
+          want="223e3959d539110eaacfacb6f973c03928dc39b0"
+          echo "upstream HEAD=$got"
+          test "$got" = "$want"
+
+  rust:
+    name: Rust
+    needs: [detect-changes, pin]
+    if: ${{ github.event_name != 'pull_request' || needs.detect-changes.outputs.rust == 'true' }}
+    uses: ./.github/workflows/upstream-rust-test-lint.yml
+    permissions:
+      contents: read
+    with:
+      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  upstream-parity:
+    name: Upstream parity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
+        with:
+          toolchain: 1.99.0
+      - name: Regenerate scripts/upstream-test.sh
+        run: cargo run -p xtask --locked -- extract-upstream
+      - name: Fail on drift
+        run: git diff --exit-code scripts/upstream-test.sh
+      - name: Check upstream parity
+        run: bash scripts/check-upstream-parity

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+if [[ -e .cursor/skills ]]; then
+  echo "forbidden: .cursor/skills exists"
+  exit 1
+fi
+
+if [[ -e .agents/skills ]]; then
+  echo "forbidden: .agents/skills exists (lab skills live only under .claude/skills)"
+  exit 1
+fi
+
+shopt -s nullglob
+skills=(.claude/skills/*/SKILL.md)
+if [[ ${#skills[@]} -eq 0 ]]; then
+  echo "no skills found under .claude/skills/*/SKILL.md"
+  exit 1
+fi
+
+outside=()
+while IFS= read -r -d '' file; do
+  outside+=("$file")
+done < <(find . -name SKILL.md -not -path './.claude/skills/*' -not -path './upstream/*' -print0)
+if [[ ${#outside[@]} -gt 0 ]]; then
+  echo "SKILL.md outside .claude/skills:"
+  printf '  %s\n' "${outside[@]}"
+  exit 1
+fi
+
+for skill in "${skills[@]}"; do
+  folder="$(basename "$(dirname "$skill")")"
+  if ! grep -q '^---$' "$skill"; then
+    echo "missing YAML frontmatter: $skill"
+    exit 1
+  fi
+  name="$(awk '/^name:/{print $2; exit}' "$skill")"
+  desc="$(awk '/^description:/{print; exit}' "$skill")"
+  if [[ -z "$name" ]]; then
+    echo "missing name: in $skill"
+    exit 1
+  fi
+  if [[ "$name" != "$folder" ]]; then
+    echo "name '$name' != folder '$folder' in $skill"
+    exit 1
+  fi
+  if [[ -z "$desc" || "$desc" == "description:" ]]; then
+    echo "empty description in $skill"
+    exit 1
+  fi
+done
+
+echo "skills-layout ok (${#skills[@]} skill(s))"

@@ -1,0 +1,106 @@
+// Merge-locked Dogwood policy for agent-scale PRs.
+// Default deny. Read-only git is permitted. Push, merge, rebase onto main, and
+// `gh pr merge` stay refused until an operator unlocks the policy.
+
+@id("git_status")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "status"
+};
+
+@id("git_diff")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "diff"
+};
+
+@id("git_log")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "log"
+};
+
+@id("git_fetch")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "fetch"
+};
+
+@id("git_show")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "show"
+};
+
+@id("git_rev_parse")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "rev-parse"
+};
+
+@id("git_branch_list")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "branch" &&
+  !(context.input has arg2 && (context.input.arg2 == "-d" || context.input.arg2 == "-D" || context.input.arg2 == "-m" || context.input.arg2 == "-M"))
+};
+
+@id("gh_pr_readonly")
+permit (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "gh" &&
+  context.input has arg1 && context.input.arg1 == "pr" &&
+  context.input has arg2 && (
+    context.input.arg2 == "view" ||
+    context.input.arg2 == "list" ||
+    context.input.arg2 == "status" ||
+    context.input.arg2 == "checks" ||
+    context.input.arg2 == "diff"
+  )
+};
+
+@id("forbid_git_push")
+@description("git push is locked. Wait for merge gates, then load policies/merge-unlocked.dw.")
+forbid (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "push"
+};
+
+@id("forbid_git_merge")
+@description("git merge is locked. Open a PR and wait for gates instead of merging locally.")
+forbid (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "merge"
+};
+
+@id("forbid_git_rebase_main")
+@description("git rebase onto main is locked. Rebase onto a feature branch only after unlock.")
+forbid (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "git" &&
+  context.input has arg1 && context.input.arg1 == "rebase" &&
+  (
+    context.input.command like "* rebase main*" ||
+    context.input.command like "* rebase master*" ||
+    context.input.command like "* rebase origin/main*" ||
+    context.input.command like "* rebase origin/master*"
+  )
+};
+
+@id("forbid_gh_pr_merge")
+@description("gh pr merge is locked. Keep the PR open until CI and review gates pass.")
+forbid (principal, action == Box::Action::"shell:spawn", resource)
+when {
+  context.input.program == "gh" &&
+  context.input has arg1 && context.input.arg1 == "pr" &&
+  context.input has arg2 && context.input.arg2 == "merge"
+};

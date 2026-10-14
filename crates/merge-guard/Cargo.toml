@@ -1,0 +1,20 @@
+[package]
+name = "merge-guard"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI that checks whether a command is ALLOWED or DENIED by a Dogwood merge policy."
+publish = false
+
+[[bin]]
+name = "merge-guard"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+strands-box-policy.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

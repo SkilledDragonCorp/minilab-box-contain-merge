@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["crates/merge-guard", "crates/xtask"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+strands-box-policy = { git = "https://github.com/strands-agents/box", rev = "223e3959d539110eaacfacb6f973c03928dc39b0" }
+tempfile = "3"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+serde_json = "1"

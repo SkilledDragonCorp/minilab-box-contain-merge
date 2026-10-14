@@ -1,0 +1,41 @@
+# Example Strands Box config that loads the merge-locked Dogwood policy.
+#
+# PREVIEW: Strands Box local sandbox execution is supported on macOS Apple silicon only today;
+# Linux support is planned.
+#
+# GITHUB_TOKEN is injected by Box from the host environment through [egress] / credential
+# bindings. It is never placed in [agent.env], so the agent process never sees the secret.
+
+name = "merge-guard-demo"
+box_dir = "<HOME>/box-tutorial/merge-guard/state"
+policy = "../policies/merge-locked.dw"
+
+[agent]
+command = ["/bin/zsh", "-lc"]
+workspace = "<HOME>/box-tutorial/merge-guard/workspace"
+
+[agent.env]
+PATH = "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"
+# Telemetry opt-out for the demo agent process.
+OTEL_SDK_DISABLED = "true"
+OTEL_TRACES_EXPORTER = "none"
+OTEL_METRICS_EXPORTER = "none"
+OTEL_LOGS_EXPORTER = "none"
+
+[agent.filesystem]
+read = ["~/box-tutorial/merge-guard/workspace"]
+write = ["~/box-tutorial/merge-guard/workspace"]
+list = ["~/box-tutorial/merge-guard/workspace"]
+
+# Host git binary. Pair with shell:spawn permits in the policy.
+[tool.git]
+command = ["/usr/bin/git"]
+
+[tool.git.filesystem]
+read = ["~/box-tutorial/merge-guard/workspace", "/usr/bin"]
+write = ["~/box-tutorial/merge-guard/workspace"]
+
+# Optional: inject GITHUB_TOKEN onto github.com requests only. The agent never reads the value.
+[egress.github]
+destinations = ["api.github.com", "github.com"]
+secret.ref = "env://GITHUB_TOKEN"
