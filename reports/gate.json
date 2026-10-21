@@ -1,0 +1,61 @@
+{
+  "lab": "minilab-box-contain-merge",
+  "sha": "1668ad800dcb50236eb0662bcf5a1bcdcc68eed7",
+  "sha_short": "1668ad8",
+  "parent_ci_sha": "a14076dcdef3d60aa55b747c672758e0c389023b",
+  "pin": "223e3959d539110eaacfacb6f973c03928dc39b0",
+  "pin_short": "223e3959",
+  "upstream": "strands-agents/box",
+  "upstream_release": "v0.1.0",
+  "keyless": true,
+  "generated_at": "2026-10-14T07:19:30Z",
+  "host": "darwin",
+  "note": "Local keyless macOS: cargo test --workspace --locked → 3 passed (policy_table: 26 cmds, parse, GITHUB_TOKEN strip); merge-guard smoke ALLOW git status / DENY git push origin main (exit 1). Live Box deny cfg is macos aarch64 (CI macos-live). Upstream unit+lint green @ a14076d run 38525497805; lab CI green @ 1668ad8 run 38526923707 (docs RESULTS fill on top of a14076d).",
+  "checks": {
+    "cargo_test_workspace": {
+      "passed": 3,
+      "failed": 0,
+      "elapsed_s": 16,
+      "table_cases": 26
+    },
+    "merge_guard_smoke": {
+      "git_status_locked": "ALLOW rule=git_status",
+      "git_push_main_locked": "DENY rule=forbid_git_push",
+      "git_push_main_exit": 1
+    },
+    "upstream_pin": "223e3959d539110eaacfacb6f973c03928dc39b0",
+    "keyless": true
+  },
+  "ci": {
+    "lab_run_id": 38526923707,
+    "lab_url": "https://github.com/SkilledDragonCorp/minilab-box-contain-merge/actions/runs/38526923707",
+    "lab_run_at_parent_id": 38525497616,
+    "lab_run_at_parent_url": "https://github.com/SkilledDragonCorp/minilab-box-contain-merge/actions/runs/38525497616",
+    "upstream_run_id": 38525497805,
+    "upstream_url": "https://github.com/SkilledDragonCorp/minilab-box-contain-merge/actions/runs/38525497805",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "1668ad800dcb50236eb0662bcf5a1bcdcc68eed7",
+    "upstream_head_sha": "a14076dcdef3d60aa55b747c672758e0c389023b",
+    "jobs": {
+      "lab_test": { "conclusion": "success", "duration_s": 23 },
+      "lab_lint": { "conclusion": "success", "duration_s": 22 },
+      "lab_macos_live": { "conclusion": "success", "duration_s": 37 },
+      "lab_secrets": { "conclusion": "success", "duration_s": 6 },
+      "lab_audit": { "conclusion": "success", "duration_s": 135 },
+      "lab_skills_layout": { "conclusion": "success", "duration_s": 4 },
+      "lab_ci_gate": { "conclusion": "success", "duration_s": 3 },
+      "upstream_unit_ubuntu": { "conclusion": "success", "duration_s": 577 },
+      "upstream_unit_macos": { "conclusion": "success", "duration_s": 606 },
+      "upstream_lint": { "conclusion": "success", "duration_s": 55 },
+      "upstream_parity": { "conclusion": "success", "duration_s": 19 },
+      "upstream_pin": { "conclusion": "success", "duration_s": 6 }
+    }
+  },
+  "out_of_scope": [
+    "containment (containment-deterministic.yml)",
+    "verdict (verdict-hermetic.yml)",
+    "upstream ci-gate"
+  ],
+  "preview": "Strands Box local sandbox execution is a preview supported on macOS Apple silicon only today; Linux support is planned."
+}
